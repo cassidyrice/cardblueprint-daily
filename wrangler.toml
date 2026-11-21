@@ -22,7 +22,7 @@ DAILY_MESSAGE_LIMIT = "40"          # questions per subscriber per day
 REQUIRE_SUBSCRIPTION = "true"       # "false" turns the paywall off (everyone can ask)
 PRICE_LABEL = "$20 a month"
 # Stripe Dashboard > Payment Links: a $20/month recurring link. Paste its https://buy.stripe.com/... URL.
-STRIPE_PAYMENT_LINK = ""
+STRIPE_PAYMENT_LINK = "https://buy.stripe.com/6oU28raGeccU9v34s7d3i0t"   # Cassidy Rice Company, product prod_VfgWncEWcrGrjW, $20/month
 # Stripe Dashboard > Settings > Billing > Customer portal: the portal login link (lets people cancel).
 STRIPE_PORTAL_URL = ""
 
