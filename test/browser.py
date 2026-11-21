@@ -1,0 +1,32 @@
+import asyncio, time
+from playwright.async_api import async_playwright
+B="http://127.0.0.1:8787"; EMAIL=f"t{int(time.time())}@example.com"
+async def main():
+    async with async_playwright() as p:
+        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox","--no-proxy-server"])
+        cx = await b.new_context(viewport={"width":390,"height":780}, device_scale_factor=2)
+        pg = await cx.new_page()
+        errs=[]; pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("console", lambda m: errs.append(m.text) if m.type=="error" else None)
+        await pg.goto(B); await pg.wait_for_selector("#authForm", state="visible"); await pg.screenshot(path="/tmp/c1.png")
+        await pg.fill("#aName","Cass"); await pg.fill("#aEmail",EMAIL); await pg.fill("#aPass","short"); await pg.fill("#aBirth","1991-02-17")
+        await pg.evaluate("document.getElementById('aPass').removeAttribute('minlength')"); await pg.click("#authGo"); await pg.wait_for_timeout(500)
+        print("weak:", await pg.inner_text("#authMsg"))
+        await pg.fill("#aPass","longenough12"); await pg.click("#authGo"); await pg.wait_for_selector(".tile"); await pg.wait_for_timeout(400)
+        print("tiles", await pg.locator(".tile").count(), "| hello:", (await pg.inner_text(".hello h1")))
+        await pg.click("#peopleBtn"); await pg.fill("#pName","Mom"); await pg.fill("#pDate","1962-03-09"); await pg.fill("#pRel","mom"); await pg.click("#sheet .addform button"); await pg.wait_for_selector(".person")
+        await pg.fill("#pName","Jo"); await pg.fill("#pDate","1990-12-31"); await pg.click("#sheet .addform button"); await pg.wait_for_timeout(500); print("joker:", await pg.inner_text("#pMsg"))
+        print("people", await pg.locator(".person").count(), "alerts", await pg.locator(".arow").count(), "bar:", await pg.inner_text("#alertbar"))
+        await pg.click(".arow >> nth=0"); await pg.wait_for_selector(".bot .bubble:not(:has(.thinking))"); await pg.wait_for_timeout(500)
+        print("answer1:", (await pg.locator(".bot .bubble").last.inner_text())[:90])
+        await pg.fill("#input","What is my card on December 25?"); await pg.click("#send"); await pg.wait_for_timeout(1500)
+        print("answer2:", await pg.locator(".bot .bubble").last.inner_text()); await pg.screenshot(path="/tmp/c2.png")
+        await pg.fill("#input","FAIL please"); await pg.click("#send"); await pg.wait_for_timeout(1200); print("fail:", await pg.locator(".bot .bubble").last.inner_text())
+        await pg.reload(); await pg.wait_for_selector(".tile"); await pg.wait_for_timeout(700); print("after reload bubbles", await pg.locator(".bubble").count(), "badge", await pg.inner_text("#badge"))
+        await pg.click("#accountBtn"); await pg.wait_for_timeout(200); await pg.screenshot(path="/tmp/c3.png")
+        await pg.click("#acOut"); await pg.wait_for_selector("#authForm", state="visible"); print("signed out:", await pg.inner_text("#authTitle"))
+        await pg.fill("#aEmail",EMAIL); await pg.fill("#aPass","wrongwrong12"); await pg.click("#authGo"); await pg.wait_for_timeout(600); print("bad login:", await pg.inner_text("#authMsg"))
+        await pg.fill("#aPass","longenough12"); await pg.click("#authGo"); await pg.wait_for_selector(".tile"); await pg.wait_for_timeout(600); print("back in, bubbles", await pg.locator(".bubble").count())
+        await pg.click("#accountBtn"); await pg.fill("#acPw","longenough12"); await pg.click("#acDel button"); await pg.wait_for_selector("#authForm", state="visible"); print("deleted:", await pg.inner_text("#authMsg"))
+        await pg.click("#authSwap"); await pg.fill("#aEmail",EMAIL); await pg.fill("#aPass","longenough12"); await pg.click("#authGo"); await pg.wait_for_timeout(600); print("login after delete:", await pg.inner_text("#authMsg"))
+        print("errors", [e for e in errs if "401" not in e and "400" not in e and "status of 4" not in e]); await b.close()
+asyncio.run(main())

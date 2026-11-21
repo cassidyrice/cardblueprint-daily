@@ -1,0 +1,16 @@
+{
+  "name": "cardblueprint-daily",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:local": "wrangler d1 migrations apply cardblueprint-daily --local",
+    "db:remote": "wrangler d1 migrations apply cardblueprint-daily --remote",
+    "deploy": "wrangler deploy",
+    "build:client": "bun build vendor/client-entry.mjs --outfile public/engine.js --format iife --minify --target browser"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}

@@ -1,0 +1,36 @@
+name = "cardblueprint-daily"
+main = "src/worker.mjs"
+compatibility_date = "2025-09-01"
+
+# Static app (public/) is served first; anything under /api/ runs the Worker.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+# After `npx wrangler d1 create cardblueprint-daily`, paste the database_id it prints.
+[[d1_databases]]
+binding = "DB"
+database_name = "cardblueprint-daily"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[vars]
+CLAUDE_MODEL = "claude-haiku-5-5"
+ANTHROPIC_VERSION = "2026-10-21"
+DAILY_MESSAGE_LIMIT = "40"          # questions per subscriber per day
+REQUIRE_SUBSCRIPTION = "true"       # "false" turns the paywall off (everyone can ask)
+PRICE_LABEL = "$20 a month"
+# Stripe Dashboard > Payment Links: a $20/month recurring link. Paste its https://buy.stripe.com/... URL.
+STRIPE_PAYMENT_LINK = ""
+# Stripe Dashboard > Settings > Billing > Customer portal: the portal login link (lets people cancel).
+STRIPE_PORTAL_URL = ""
+
+# Daily cleanup of expired sessions.
+[triggers]
+crons = ["17 9 * * *"]
+
+# The Claude API key is a secret, never a var:
+#   npx wrangler secret put ANTHROPIC_API_KEY
+#   npx wrangler secret put STRIPE_WEBHOOK_SECRET   (whsec_..., from the webhook endpoint you add in Stripe)
+#   npx wrangler secret put STRIPE_SECRET_KEY       (a restricted key that can write Subscriptions; used only to cancel on account deletion)
